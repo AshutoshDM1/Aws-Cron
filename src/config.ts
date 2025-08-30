@@ -16,6 +16,13 @@ export const siteConfigs: PingConfig[] = [
     retries: 3,
     retryDelay: 1000 // 1 second
   },
+  {
+    url: 'https://codegen.elitedev.tech',
+    schedule: '*/10 * * * * *', // Every 10 seconds
+    timeout: 10000, // 10 seconds
+    retries: 3,
+    retryDelay: 1000 // 1 second
+  },
 ];
 
 // Cron schedule examples:
