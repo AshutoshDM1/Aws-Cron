@@ -7,7 +7,7 @@ export const siteConfigs: PingConfig[] = [
     schedule: '*/10 * * * * *', // Every 10 seconds
     timeout: 10000, // 10 seconds
     retries: 3,
-    retryDelay: 30000 // 1 second 
+    retryDelay: 30000 // 12 second 
   },
   {
     url: 'https://elitedev.tech',
