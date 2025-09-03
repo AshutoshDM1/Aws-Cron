@@ -1,42 +1,40 @@
-import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
-import { Analytics } from '@vercel/analytics/react';
-import './globals.css';
-import { ThemeProvider } from '@/components/ui/theme-provider';
+import type React from "react"
+import type { Metadata } from "next"
+import { Analytics } from "@vercel/analytics/next"
+import "./globals.css"
+import { ThemeProvider } from "@/components/ui/theme-provider"
+import { Toaster } from "@/components/ui/sonner"
+import { Suspense } from "react"
+import { Titillium_Web } from "next/font/google"
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-});
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-});
+const titilliumWeb = Titillium_Web({
+  subsets: ["latin"],
+  weight: ["200", "300", "400", "600", "700", "900"],
+  variable: "--font-titillium",
+})
 
 export const metadata: Metadata = {
-  title: 'Elite Cron',
-  description: 'Elite Cron',
-};
+  title: "v0 App",
+  description: "Created with v0",
+  generator: "v0.app",
+}
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased `}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-        </ThemeProvider>
-        <Analytics />
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${titilliumWeb.variable} ${titilliumWeb.className}`}>
+        <Suspense fallback={null}>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+            {children}
+            <Toaster />
+            <Analytics />
+          </ThemeProvider>
+        </Suspense>
       </body>
     </html>
-  );
+  )
 }
