@@ -13,7 +13,7 @@ export default function NewCronPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle>New Monitor</CardTitle>
-            <CardDescription>We’ll ping this URL on your schedule.</CardDescription>
+            <CardDescription>We’ll ping this URL on your schedule.   </CardDescription>
           </CardHeader>
           <CardContent>
             <Suspense fallback={<div className="text-sm text-muted-foreground">Loading form…</div>}>
