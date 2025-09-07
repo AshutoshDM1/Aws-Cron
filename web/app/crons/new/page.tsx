@@ -8,7 +8,7 @@ export default function NewCronPage() {
       <div className="max-w-2xl mx-auto space-y-6">
         <header>
           <h1 className="text-2xl md:text-3xl font-semibold text-pretty">Create Cron Job</h1>
-          <p className="text-sm text-muted-foreground mt-1">Add a site to monitor and set its check interval.</p>
+          <p className="text-sm text-muted-foreground mt-1">Add a site to monitor </p>
         </header>
         <Card>
           <CardHeader className="pb-2">
