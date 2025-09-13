@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/ui/theme-provider"
 import { Toaster } from "@/components/ui/sonner"
 import { Suspense } from "react"
 import { Titillium_Web } from "next/font/google"
+import { Ubuntu } from "next/font/google"
 
 const titilliumWeb = Titillium_Web({
   subsets: ["latin"],
@@ -13,10 +14,16 @@ const titilliumWeb = Titillium_Web({
   variable: "--font-titillium",
 })
 
+const ubuntu = Ubuntu({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "700"],
+  variable: "--font-ubuntu",
+})
+
 export const metadata: Metadata = {
-  title: "v0 App",
-  description: "Created with v0",
-  generator: "v0.app",
+  title: "Elite Cron",
+  description: "Elite Cron",
+  generator: "Elite Cron",
 }
 
 export default function RootLayout({
@@ -26,9 +33,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${titilliumWeb.variable} ${titilliumWeb.className}`}>
+      <body className={`${titilliumWeb.variable} ${ubuntu.variable} font-ubuntu`}>
         <Suspense fallback={null}>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
             {children}
             <Toaster />
             <Analytics />
