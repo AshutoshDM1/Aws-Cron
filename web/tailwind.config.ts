@@ -12,6 +12,8 @@ const config: Config = {
         sans: ["var(--font-titillium)", "Inter", "ui-sans-serif", "system-ui", "sans-serif"],
         serif: ["Source Serif 4", "serif"],
         mono: ["JetBrains Mono", "monospace"],
+        ubuntu: ['var(--font-ubuntu)', 'sans-serif'],
+        titillium: ['var(--font-titillium)', 'sans-serif'],
       },
     },
   },
