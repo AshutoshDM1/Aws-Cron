@@ -1,5 +1,9 @@
+import express from 'express';
+import cors from 'cors';
 import cron from 'node-cron';
 import axios from 'axios';
+import fs from 'fs/promises';
+import path from 'path';
 import { siteConfigs } from './config';
 
 interface PingConfig {
@@ -22,11 +26,54 @@ interface PingResult {
 class SitePinger {
   private configs: PingConfig[] = [];
   private results: PingResult[] = [];
+  private dataDir = path.join(process.cwd(), 'data');
+  private resultsFile = path.join(this.dataDir, 'results.json');
+  private statsFile = path.join(this.dataDir, 'stats.json');
 
   constructor(configs: PingConfig[] = []) {
     this.configs = configs;
+    this.initializeStorage();
     if (this.configs.length === 0) {
       console.log('⚠️  No ping configurations provided. Add some in config.ts');
+    }
+  }
+
+  private async initializeStorage(): Promise<void> {
+    try {
+      await fs.mkdir(this.dataDir, { recursive: true });
+      await this.loadResults();
+    } catch (error) {
+      console.error('Failed to initialize storage:', error);
+    }
+  }
+
+  private async loadResults(): Promise<void> {
+    try {
+      const data = await fs.readFile(this.resultsFile, 'utf-8');
+      this.results = JSON.parse(data).map((r: any) => ({
+        ...r,
+        timestamp: new Date(r.timestamp)
+      }));
+    } catch (error) {
+      // File doesn't exist yet, start with empty results
+      this.results = [];
+    }
+  }
+
+  private async saveResults(): Promise<void> {
+    try {
+      await fs.writeFile(this.resultsFile, JSON.stringify(this.results, null, 2));
+    } catch (error) {
+      console.error('Failed to save results:', error);
+    }
+  }
+
+  private async saveStats(): Promise<void> {
+    try {
+      const stats = this.getStats();
+      await fs.writeFile(this.statsFile, JSON.stringify(stats, null, 2));
+    } catch (error) {
+      console.error('Failed to save stats:', error);
     }
   }
 
@@ -87,6 +134,8 @@ class SitePinger {
     }
     
     this.results.push(lastResult!);
+    await this.saveResults();
+    await this.saveStats();
     return lastResult!;
   }
 
@@ -115,6 +164,10 @@ class SitePinger {
     return this.results;
   }
 
+  getConfigs(): PingConfig[] {
+    return this.configs;
+  }
+
   getStats(): { total: number; success: number; failed: number; avgResponseTime: number } {
     const total = this.results.length;
     const success = this.results.filter(r => r.status === 'success').length;
@@ -137,18 +190,56 @@ class SitePinger {
   }
 }
 
-// Main application function
-async function main() {
-  console.log('🌐 AWS Cron - Site Monitoring Service');
-  console.log('=====================================\n');
+// Express server setup
+async function createServer() {
+  const app = express();
+  const PORT = process.env.PORT || 3000;
+  
+  app.use(cors());
+  app.use(express.json());
   
   const pinger = new SitePinger(siteConfigs);
   
-  // Start the cron jobs
+  // Start cron jobs
   pinger.startCronJobs();
   
-  // Keep the process running
-  console.log('\n🔄 Cron jobs are running. Press Ctrl+C to stop.');
+  // API Routes
+  app.get('/api/health', (req, res) => {
+    res.json({ status: 'OK', timestamp: new Date().toISOString() });
+  });
+  
+  app.get('/api/stats', (req, res) => {
+    const stats = pinger.getStats();
+    res.json(stats);
+  });
+  
+  app.get('/api/results', (req, res) => {
+    const limit = parseInt(req.query.limit as string) || 100;
+    const results = pinger.getResults().slice(-limit);
+    res.json(results);
+  });
+  
+  app.get('/api/results/:url', (req, res) => {
+    const url = decodeURIComponent(req.params.url);
+    const limit = parseInt(req.query.limit as string) || 50;
+    const results = pinger.getResults()
+      .filter(r => r.url === url)
+      .slice(-limit);
+    res.json(results);
+  });
+  
+  app.get('/api/configs', (req, res) => {
+    res.json(pinger.getConfigs());
+  });
+  
+  // Start server
+  app.listen(PORT, () => {
+    console.log('🌐 AWS Cron - Site Monitoring API Server');
+    console.log('========================================');
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`📊 API endpoints available at http://localhost:${PORT}/api`);
+    console.log('🔄 Cron jobs are running in the background');
+  });
   
   // Print stats every 10 minutes
   setInterval(() => {
@@ -161,11 +252,13 @@ async function main() {
     pinger.printStats();
     process.exit(0);
   });
+  
+  return app;
 }
 
 // Run the application
 if (require.main === module) {
-  main().catch(console.error);
+  createServer().catch(console.error);
 }
 
 export { SitePinger, PingConfig, PingResult };

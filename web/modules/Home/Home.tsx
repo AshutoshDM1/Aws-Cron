@@ -1,6 +1,9 @@
+import Dashboard from "./components/Dashboart";
+
 const Home = () => {
   return (
-    <div className="p-8 space-y-4">
+    <div className="py-5 px-2 space-y-4">
+      <Dashboard />
     </div>
   );
 };
