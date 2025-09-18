@@ -1,4 +1,4 @@
-import { PingConfig } from './index';
+import { PingConfig } from './types';
 
 // Configuration for sites to ping
 export const siteConfigs: PingConfig[] = [
@@ -8,20 +8,6 @@ export const siteConfigs: PingConfig[] = [
     timeout: 10000, // 10 seconds
     retries: 3,
     retryDelay: 30000 // 12 second 
-  },
-  {
-    url: 'https://elitedev.tech',
-    schedule: '*/10 * * * * *', // Every 10 seconds
-    timeout: 10000, // 10 seconds
-    retries: 3,
-    retryDelay: 1000 // 1 second
-  },
-  {
-    url: 'https://codegen.elitedev.tech',
-    schedule: '*/10 * * * * *', // Every 10 seconds
-    timeout: 10000, // 10 seconds
-    retries: 3,
-    retryDelay: 1000 // 1 second
   },
 ];
 
