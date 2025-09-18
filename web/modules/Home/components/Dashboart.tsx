@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { Monitor } from "@/types/monitor";
 import DashboardHeader from "./DashboardHeader";
 import MonitorTable from "./MonitorTable";
+import { useMonitoredConfigs } from "@/hooks/getconfig";
 
 // Mock data for demonstration
 const mockMonitors: Monitor[] = [
@@ -39,9 +40,19 @@ const mockMonitors: Monitor[] = [
     lastChecked: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
     uptimePercent24h: 100,
   },
+  {
+    id: "5",
+    url: "backend-syndicate.onrender.com/get",
+    name: "backend-syndicate.onrender.com",
+    status: "up",
+    lastChecked: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+    uptimePercent24h: 100,
+  },
 ];
 
-const Dashboard = () => {
+const  Dashboard = () => {
+  const configs = useMonitoredConfigs();
+  console.log(configs);
   const [monitors, setMonitors] = useState<Monitor[]>(mockMonitors);
   const [selectedMonitors, setSelectedMonitors] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");

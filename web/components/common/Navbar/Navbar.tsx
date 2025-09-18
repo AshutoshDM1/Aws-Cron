@@ -1,4 +1,4 @@
-import ThemeToggleButton from '@/components/ui/theme-toggle-button';
+import { ThemeToggleButton } from '@/components/ui/theme-animations';
 
 const Navbar = () => {
   return (
@@ -27,7 +27,7 @@ const Navbar = () => {
         </li>
       </ul>
       <div className="flex space-x-6 ">
-        <ThemeToggleButton  start="top-right" />
+        <ThemeToggleButton variant="rectangle" start="right-left" className="h-6 w-6 cursor-pointer" />
       </div>
     </nav>
   );
