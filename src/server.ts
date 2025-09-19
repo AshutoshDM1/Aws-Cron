@@ -12,11 +12,13 @@ export async function createServer() {
   app.use(cors());
   app.use(express.json());
   
-  // Initialize monitoring service
+  // Initialize monitoring service with fallback configs
   const monitoringService = new MonitoringService(siteConfigs);
   
-  // Start cron jobs
-  monitoringService.startCronJobs();
+  // Wait a moment for initialization to complete, then start cron jobs
+  setTimeout(() => {
+    monitoringService.startCronJobs();
+  }, 1000);
   
   // API Routes
   app.use('/api', createApiRoutes(monitoringService));
