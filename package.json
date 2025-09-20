@@ -10,7 +10,7 @@
     "dev": "ts-node src/index.ts",
     "server": "npm run dev",
     "web": "cd web && npm run dev",
-    "dev:all": "concurrently \"npm run dev\" \"npm run web\"",
+    "dev:all": "npm run dev & npm run web",
     "format": "prettier --write .",
     "check-format": "prettier --check ."
   },
@@ -30,7 +30,6 @@
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
     "node-cron": "^3.0.3",
-    "tsc": "^2.0.4",
     "zod": "^4.1.5"
   },
   "devDependencies": {

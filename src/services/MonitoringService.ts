@@ -1,11 +1,12 @@
 import cron from 'node-cron';
-import { PingConfig, PingResult, PingStats } from '../types';
+import { PingConfig, PingResult, PingStats, URLStats } from '../types';
 import { PingService } from './PingService';
 import { FileStorageService } from './FileStorageService';
 
 export class MonitoringService {
   private configs: PingConfig[] = [];
   private results: PingResult[] = [];
+  private urlStats: URLStats[] = [];
   private pingService = new PingService();
   private storageService = new FileStorageService();
   private cronJobs: Map<string, any> = new Map(); // Store cron job references
@@ -17,6 +18,7 @@ export class MonitoringService {
   private async initialize(fallbackConfigs: PingConfig[] = []): Promise<void> {
     await this.storageService.initialize();
     this.results = await this.storageService.loadResults();
+    this.urlStats = await this.storageService.loadURLStats();
     
     // Load monitors from JSON file, fallback to provided configs
     this.configs = await this.storageService.loadMonitors();
@@ -32,6 +34,9 @@ export class MonitoringService {
     } else {
       console.log(`📋 Loaded ${this.configs.length} monitor configuration(s)`);
     }
+
+    // Initialize URL stats if they don't exist
+    await this.updateURLStats();
   }
 
   async addPingConfig(config: PingConfig): Promise<void> {
@@ -48,9 +53,13 @@ export class MonitoringService {
     const result = await this.pingService.pingWithRetries(config);
     this.results.push(result);
     
+    // Update URL stats
+    await this.updateURLStats();
+    
     // Save to file
     await this.storageService.saveResults(this.results);
     await this.storageService.saveStats(this.getStats());
+    await this.storageService.saveURLStats(this.urlStats);
     
     return result;
   }
@@ -69,6 +78,12 @@ export class MonitoringService {
   }
 
   private startCronJobForConfig(config: PingConfig): void {
+    // Validate schedule before proceeding
+    if (!config.schedule || typeof config.schedule !== 'string') {
+      console.warn(`⚠️  Invalid or missing schedule for ${config.url}, skipping cron job creation`);
+      return;
+    }
+
     // Stop existing job if it exists
     const existingJob = this.cronJobs.get(config.url);
     if (existingJob) {
@@ -76,17 +91,22 @@ export class MonitoringService {
       existingJob.destroy();
     }
 
-    // Create and start new cron job
-    const job = cron.schedule(config.schedule, async () => {
-      console.log(`\n⏰ Executing scheduled ping for ${config.url}`);
-      await this.executePing(config);
-    }, {
-      scheduled: true,
-      timezone: "UTC"
-    });
-
-    this.cronJobs.set(config.url, job);
-    console.log(`📅 Scheduled ping for ${config.url} with cron: ${config.schedule}`);
+    try {
+      // Create and start new cron job
+      const job = cron.schedule(config.schedule, async () => {
+        console.log(`⏰ Executing scheduled ping for ${config.url}`);
+        await this.executePing(config);
+      }, {
+        scheduled: true,
+        timezone: "UTC"
+      });
+    
+      this.cronJobs.set(config.url, job);
+      console.log(`📅 Scheduled ping for ${config.url} with cron: ${config.schedule}`);
+    } catch (error) {
+      console.error(`❌ Failed to create cron job for ${config.url}:`, error);
+      console.error(`   Schedule provided: "${config.schedule}"`);
+    }
   }
 
   private stopCronJobForUrl(url: string): void {
@@ -226,5 +246,74 @@ export class MonitoringService {
     console.log(`Successful: ${stats.success}`);
     console.log(`Failed: ${stats.failed}`);
     console.log(`Average response time: ${stats.avgResponseTime}ms`);
+  }
+
+  async updateURLStats(): Promise<void> {
+    this.urlStats = this.configs.map(config => {
+      const urlResults = this.results.filter(r => r.url === config.url);
+      const recentResults = urlResults.slice(-100); // Last 100 results
+      const lastResult = urlResults[urlResults.length - 1];
+      
+      // Calculate uptime percentage
+      const successCount = recentResults.filter(r => r.status === 'success').length;
+      const uptimePercent = recentResults.length > 0 ? Math.round((successCount / recentResults.length) * 100) : 0;
+      
+      // Calculate average response time
+      const responseTimes = recentResults.filter(r => r.responseTime).map(r => r.responseTime!);
+      const avgResponseTime = responseTimes.length > 0 
+        ? Math.round(responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length)
+        : 0;
+      
+      // Get interval from cron schedule (convert to minutes for display)
+      const interval = this.cronScheduleToMinutes(config.schedule);
+      
+      // Determine current status
+      let status = 'unknown';
+      let lastError = '';
+      
+      if (lastResult) {
+        status = lastResult.status === 'success' ? 'up' : 'down';
+        if (lastResult.error) {
+          lastError = lastResult.error;
+        }
+      }
+      
+      return {
+        URL: config.url,
+        Uptime: `${uptimePercent}%`,
+        Interval: interval,
+        AvrageResponseTime: avgResponseTime,
+        Status: status,
+        lastError: lastError
+      };
+    });
+  }
+
+  private cronScheduleToMinutes(schedule: string | undefined): number {
+    // Simple conversion for common patterns
+    // */10 * * * * * = every 10 seconds = 0.17 minutes
+    // */5 * * * * = every 5 minutes = 5 minutes
+    // 0 */10 * * * = every 10 minutes = 10 minutes
+    
+    if (!schedule) return 5; // Default if no schedule provided
+    
+    if (schedule.includes('*/10 * * * * *')) return 0.17; // 10 seconds
+    if (schedule.includes('*/30 * * * * *')) return 0.5;  // 30 seconds
+    if (schedule.includes('*/1 * * * *')) return 1;       // 1 minute
+    if (schedule.includes('*/5 * * * *')) return 5;       // 5 minutes
+    if (schedule.includes('*/10 * * * *')) return 10;     // 10 minutes
+    if (schedule.includes('*/15 * * * *')) return 15;     // 15 minutes
+    if (schedule.includes('*/30 * * * *')) return 30;     // 30 minutes
+    
+    return 5; // Default to 5 minutes
+  }
+
+  getURLStats(): URLStats[] {
+    return this.urlStats;
+  }
+
+  async getURLStatsByUrl(url: string): Promise<URLStats | null> {
+    const stats = this.urlStats.find(stat => stat.URL === url);
+    return stats || null;
   }
 }

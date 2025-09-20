@@ -1,12 +1,13 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { PingResult, PingStats, PingConfig } from '../types';
+import { PingResult, PingStats, PingConfig, URLStats } from '../types';
 
 export class FileStorageService {
   private dataDir = path.join(process.cwd(), 'data');
   private resultsFile = path.join(this.dataDir, 'results.json');
   private statsFile = path.join(this.dataDir, 'stats.json');
   private monitorsFile = path.join(this.dataDir, 'monitors.json');
+  private urlStatsFile = path.join(this.dataDir, 'url-stats.json');
 
   async initialize(): Promise<void> {
     try {
@@ -64,6 +65,26 @@ export class FileStorageService {
       console.log('✅ Saved monitors configuration to file');
     } catch (error) {
       console.error('Failed to save monitors config:', error);
+      throw error;
+    }
+  }
+
+  async loadURLStats(): Promise<URLStats[]> {
+    try {
+      const data = await fs.readFile(this.urlStatsFile, 'utf-8');
+      return JSON.parse(data);
+    } catch (error) {
+      console.warn('Failed to load URL stats, using empty array:', error);
+      return [];
+    }
+  }
+
+  async saveURLStats(urlStats: URLStats[]): Promise<void> {
+    try {
+      await fs.writeFile(this.urlStatsFile, JSON.stringify(urlStats, null, 2));
+      console.log('✅ Saved URL stats to file');
+    } catch (error) {
+      console.error('Failed to save URL stats:', error);
       throw error;
     }
   }

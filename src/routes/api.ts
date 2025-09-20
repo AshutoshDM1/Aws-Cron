@@ -132,5 +132,43 @@ export function createApiRoutes(monitoringService: MonitoringService): Router {
     }
   });
 
+  // Get URL statistics for all monitors
+  router.get('/url-stats', (req, res) => {
+    const urlStats = monitoringService.getURLStats();
+    res.json(urlStats);
+  });
+
+  // Get URL statistics for a specific URL
+  router.get('/url-stats/:url', async (req, res) => {
+    try {
+      const url = decodeURIComponent(req.params.url);
+      const urlStats = await monitoringService.getURLStatsByUrl(url);
+      
+      if (!urlStats) {
+        return res.status(404).json({ error: 'URL stats not found' });
+      }
+      
+      res.json(urlStats);
+    } catch (error) {
+      console.error('Error fetching URL stats:', error);
+      res.status(500).json({ error: 'Failed to fetch URL stats' });
+    }
+  });
+
+  // Update URL statistics (manual refresh)
+  router.post('/url-stats/refresh', async (req, res) => {
+    try {
+      await monitoringService.updateURLStats();
+      const urlStats = monitoringService.getURLStats();
+      res.json({ 
+        message: 'URL stats updated successfully', 
+        stats: urlStats 
+      });
+    } catch (error) {
+      console.error('Error refreshing URL stats:', error);
+      res.status(500).json({ error: 'Failed to refresh URL stats' });
+    }
+  });
+
   return router;
 }

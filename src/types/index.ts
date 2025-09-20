@@ -21,3 +21,12 @@ export interface PingStats {
   failed: number;
   avgResponseTime: number;
 }
+
+export interface URLStats {
+  URL : string;
+  Uptime : string;
+  Interval : number; 
+  AvrageResponseTime : number;
+  Status : string;
+  lastError: string 
+}
