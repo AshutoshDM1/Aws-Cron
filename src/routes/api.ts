@@ -103,7 +103,6 @@ export function createApiRoutes(monitoringService: MonitoringService): Router {
     try {
       const url = decodeURIComponent(req.params.url);
       const success = await monitoringService.deleteMonitor(url);
-      
       if (success) {
         res.json({ message: 'Monitor deleted successfully' });
       } else {

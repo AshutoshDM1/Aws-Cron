@@ -25,7 +25,8 @@ interface DashboardHeaderProps {
   onShowGroups: () => void;
   searchValue: string;
   onSearchChange: (value: string) => void;
-  onFilter: () => void;
+  statusFilter: "all" | "up" | "down" | "unknown";
+  onStatusFilterChange: (filter: "all" | "up" | "down" | "unknown") => void;
   onSortChange: (sortBy: string) => void;
 }
 
@@ -37,7 +38,8 @@ const DashboardHeader = ({
   onShowGroups,
   searchValue,
   onSearchChange,
-  onFilter,
+  statusFilter,
+  onStatusFilterChange,
   onSortChange,
 }: DashboardHeaderProps) => {
   return (
@@ -102,15 +104,57 @@ const DashboardHeader = ({
             />
           </div>
           
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onFilter}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            <Filter className="w-4 h-4 mr-2" />
-            Filter
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-muted-foreground hover:text-foreground cursor-pointer"
+              >
+                <Filter className="w-4 h-4 mr-2" />
+                Filter
+                <ChevronDown className="w-4 h-4 ml-2" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="space-y-1" align="end">
+              <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
+                Status
+              </div>
+              <DropdownMenuItem 
+                onClick={() => onStatusFilterChange("all")}
+                className={statusFilter === "all" ? "bg-accent/50" : ""}
+              >
+                All
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => onStatusFilterChange("up")}
+                className={statusFilter === "up" ? "bg-accent/50" : ""}
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  Up
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => onStatusFilterChange("down")}
+                className={statusFilter === "down" ? "bg-accent/50" : ""}
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                  Down
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => onStatusFilterChange("unknown")}
+                className={statusFilter === "unknown" ? "bg-accent/50" : ""}
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+                  Unknown
+                </div>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

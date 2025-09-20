@@ -1,27 +1,30 @@
-"use client";
+'use client';
 
-import { useState, useMemo, useEffect } from "react";
-import { Monitor } from "@/types/monitor";
-import DashboardHeader from "./DashboardHeader";
-import MonitorTable from "./MonitorTable";
-import { MonitorForm } from "@/components/monitor-form";
-import { useMonitors } from "@/hooks/use-monitors";
+import { useState, useMemo, useEffect } from 'react';
+import { Monitor } from '@/types/monitor';
+import DashboardHeader from './DashboardHeader';
+import MonitorTable from './MonitorTable';
+import { MonitorForm } from '@/components/monitor-form';
+import { useMonitors } from '@/hooks/use-monitors';
 
 const Dashboard = () => {
-  const { 
-    monitors: fetchedMonitors, 
-    loading, 
-    error, 
-    refetch, 
-    addMonitor, 
-    updateMonitor, 
-    deleteMonitor, 
-    pingMonitor 
+  const {
+    monitors: fetchedMonitors,
+    loading,
+    error,
+    refetch,
+    addMonitor,
+    updateMonitor,
+    deleteMonitor,
+    pingMonitor,
+    getUrlStats,
+    UrlStats,
   } = useMonitors();
-  
+
   const [selectedMonitors, setSelectedMonitors] = useState<string[]>([]);
-  const [searchValue, setSearchValue] = useState("");
-  const [sortBy, setSortBy] = useState("status-down");
+  const [searchValue, setSearchValue] = useState('');
+  const [sortBy, setSortBy] = useState('status-down');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'up' | 'down' | 'unknown'>('all');
   const [showMonitorForm, setShowMonitorForm] = useState(false);
 
   // Auto-refresh every 30 seconds
@@ -35,37 +38,44 @@ const Dashboard = () => {
 
   // Filter and sort monitors
   const filteredAndSortedMonitors = useMemo(() => {
-    let filtered = fetchedMonitors.filter((monitor: Monitor) =>
-      monitor.name?.toLowerCase().includes(searchValue.toLowerCase()) ||
-      monitor.url.toLowerCase().includes(searchValue.toLowerCase())
-    );
+    let filtered = fetchedMonitors.filter((monitor: Monitor) => {
+      // Text search filter
+      const matchesSearch =
+        monitor.name?.toLowerCase().includes(searchValue.toLowerCase()) ||
+        monitor.url.toLowerCase().includes(searchValue.toLowerCase());
+
+      // Status filter
+      const matchesStatus = statusFilter === 'all' || monitor.status === statusFilter;
+
+      return matchesSearch && matchesStatus;
+    });
 
     // Sort monitors
     switch (sortBy) {
-      case "status-down":
+      case 'status-down':
         return filtered.sort((a: Monitor, b: Monitor) => {
-          if (a.status === "down" && b.status !== "down") return -1;
-          if (a.status !== "down" && b.status === "down") return 1;
+          if (a.status === 'down' && b.status !== 'down') return -1;
+          if (a.status !== 'down' && b.status === 'down') return 1;
           return 0;
         });
-      case "status-up":
+      case 'status-up':
         return filtered.sort((a: Monitor, b: Monitor) => {
-          if (a.status === "up" && b.status !== "up") return -1;
-          if (a.status !== "up" && b.status === "up") return 1;
+          if (a.status === 'up' && b.status !== 'up') return -1;
+          if (a.status !== 'up' && b.status === 'up') return 1;
           return 0;
         });
-      case "name":
-        return filtered.sort((a: Monitor, b: Monitor) => 
+      case 'name':
+        return filtered.sort((a: Monitor, b: Monitor) =>
           (a.name || a.url).localeCompare(b.name || b.url)
         );
-      case "name-desc":
-        return filtered.sort((a: Monitor, b: Monitor) => 
+      case 'name-desc':
+        return filtered.sort((a: Monitor, b: Monitor) =>
           (b.name || b.url).localeCompare(a.name || a.url)
         );
       default:
         return filtered;
     }
-  }, [fetchedMonitors, searchValue, sortBy]);
+  }, [fetchedMonitors, searchValue, sortBy, statusFilter]);
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -80,23 +90,23 @@ const Dashboard = () => {
   };
 
   const handleAddMonitor = async (monitorData: {
-    url: string
-    schedule: string
-    timeout?: number
-    retries?: number
-    retryDelay?: number
+    url: string;
+    schedule: string;
+    timeout?: number;
+    retries?: number;
+    retryDelay?: number;
   }) => {
     await addMonitor(monitorData);
   };
 
   const handleShowGroups = () => {
     // TODO: Implement group functionality
-    console.log("Show groups");
+    console.log('Show groups');
   };
 
   const handleViewIncident = (monitorId: string) => {
     // TODO: Implement incident viewing
-    console.log("View incident for monitor:", monitorId);
+    console.log('View incident for monitor:', monitorId);
   };
 
   const handleRefresh = async (monitorId: string) => {
@@ -104,16 +114,16 @@ const Dashboard = () => {
       const monitor = fetchedMonitors.find((m: Monitor) => m.id === monitorId);
       if (monitor) {
         await pingMonitor(monitor.url);
-        console.log("Monitor refreshed:", monitorId);
+        console.log('Monitor refreshed:', monitorId);
       }
     } catch (error) {
-      console.error("Failed to refresh monitor:", error);
+      console.error('Failed to refresh monitor:', error);
     }
   };
 
   const handleEdit = (monitorId: string) => {
     // TODO: Implement monitor editing dialog
-    console.log("Edit monitor:", monitorId);
+    console.log('Edit monitor:', monitorId);
   };
 
   const handleDelete = async (monitorId: string) => {
@@ -121,10 +131,10 @@ const Dashboard = () => {
       const monitor = fetchedMonitors.find((m: Monitor) => m.id === monitorId);
       if (monitor && confirm(`Are you sure you want to delete monitor for ${monitor.url}?`)) {
         await deleteMonitor(monitor.url);
-        console.log("Monitor deleted:", monitorId);
+        console.log('Monitor deleted:', monitorId);
       }
     } catch (error) {
-      console.error("Failed to delete monitor:", error);
+      console.error('Failed to delete monitor:', error);
     }
   };
 
@@ -148,7 +158,7 @@ const Dashboard = () => {
           <div className="text-center">
             <p className="text-red-500 mb-2">Error loading monitors</p>
             <p className="text-muted-foreground text-sm mb-4">{error}</p>
-            <button 
+            <button
               onClick={refetch}
               className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
             >
@@ -165,16 +175,15 @@ const Dashboard = () => {
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative">
           <span className="block sm:inline">{error}</span>
-          <button 
+          <button
             onClick={() => window.location.reload()}
             className="absolute top-0 bottom-0 right-0 px-4 py-3"
           >
-            <span className="sr-only">Dismiss</span>
-            ×
+            <span className="sr-only">Dismiss</span>×
           </button>
         </div>
       )}
-      
+
       <DashboardHeader
         selectedCount={selectedMonitors.length}
         totalCount={filteredAndSortedMonitors.length}
@@ -183,18 +192,20 @@ const Dashboard = () => {
         onShowGroups={handleShowGroups}
         searchValue={searchValue}
         onSearchChange={setSearchValue}
-        onFilter={() => console.log("Filter")}
+        statusFilter={statusFilter}
+        onStatusFilterChange={setStatusFilter}
         onSortChange={setSortBy}
       />
-      
+
       <MonitorTable
+        UrlStats={UrlStats}
         monitors={filteredAndSortedMonitors}
         selectedMonitors={selectedMonitors}
         onMonitorSelect={(monitorId, selected) => {
           if (selected) {
-            setSelectedMonitors(prev => [...prev, monitorId]);
+            setSelectedMonitors((prev) => [...prev, monitorId]);
           } else {
-            setSelectedMonitors(prev => prev.filter(id => id !== monitorId));
+            setSelectedMonitors((prev) => prev.filter((id) => id !== monitorId));
           }
         }}
         onViewIncident={handleViewIncident}
@@ -202,7 +213,7 @@ const Dashboard = () => {
         onEdit={handleEdit}
         onDelete={handleDelete}
       />
-      
+
       <MonitorForm
         open={showMonitorForm}
         onOpenChange={setShowMonitorForm}

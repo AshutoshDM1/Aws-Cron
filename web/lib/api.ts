@@ -75,6 +75,7 @@ export const monitorApi = {
   // Delete monitor
   async deleteMonitor(url: string) {
     const encodedUrl = encodeURIComponent(url)
+    console.log(url);
     return fetcher(`${API_BASE_URL}/monitors/${encodedUrl}`, {
       method: 'DELETE',
     })
@@ -85,6 +86,12 @@ export const monitorApi = {
     const encodedUrl = encodeURIComponent(url)
     return fetcher(`${API_BASE_URL}/monitors/${encodedUrl}/ping`, {
       method: 'POST',
+    })
+  },
+  // Geting stats of All URL 
+  async UrlStats() {
+    return fetcher(`${API_BASE_URL}/url-stats`, {
+      method: 'GET',
     })
   },
 

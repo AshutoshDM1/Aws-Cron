@@ -88,7 +88,6 @@ export class MonitoringService {
     const existingJob = this.cronJobs.get(config.url);
     if (existingJob) {
       existingJob.stop();
-      existingJob.destroy();
     }
 
     try {
@@ -113,7 +112,6 @@ export class MonitoringService {
     const job = this.cronJobs.get(url);
     if (job) {
       job.stop();
-      job.destroy();
       this.cronJobs.delete(url);
       console.log(`🛑 Stopped cron job for ${url}`);
     }
@@ -225,7 +223,6 @@ export class MonitoringService {
     // Stop all existing cron jobs
     this.cronJobs.forEach((job, url) => {
       job.stop();
-      job.destroy();
       console.log(`🛑 Stopped cron job for ${url}`);
     });
     this.cronJobs.clear();
@@ -267,6 +264,9 @@ export class MonitoringService {
       // Get interval from cron schedule (convert to minutes for display)
       const interval = this.cronScheduleToMinutes(config.schedule);
       
+      // Calculate total uptime duration
+      const totalUptime = this.calculateTotalUptime(urlResults);
+      
       // Determine current status
       let status = 'unknown';
       let lastError = '';
@@ -284,7 +284,8 @@ export class MonitoringService {
         Interval: interval,
         AvrageResponseTime: avgResponseTime,
         Status: status,
-        lastError: lastError
+        lastError: lastError,
+        totalUptime: totalUptime
       };
     });
   }
@@ -306,6 +307,38 @@ export class MonitoringService {
     if (schedule.includes('*/30 * * * *')) return 30;     // 30 minutes
     
     return 5; // Default to 5 minutes
+  }
+
+  private calculateTotalUptime(urlResults: any[]): string {
+    if (urlResults.length === 0) {
+      return '0 Minutes';
+    }
+    
+    // Find first and last timestamps
+    const timestamps = urlResults.map(r => new Date(r.timestamp)).sort((a, b) => a.getTime() - b.getTime());
+    const startTime = timestamps[0];
+    const endTime = timestamps[timestamps.length - 1];
+    
+    // Calculate duration
+    const durationMs = endTime.getTime() - startTime.getTime();
+    const totalMinutes = Math.floor(durationMs / (1000 * 60));
+    
+    const days = Math.floor(totalMinutes / (24 * 60));
+    const hours = Math.floor((totalMinutes % (24 * 60)) / 60);
+    const minutes = totalMinutes % 60;
+    
+    let formatted = '';
+    if (days > 0) formatted += `${days} Day${days !== 1 ? 's' : ''}`;
+    if (hours > 0) {
+      if (formatted) formatted += ' ';
+      formatted += `${hours} Hour${hours !== 1 ? 's' : ''}`;
+    }
+    if (minutes > 0) {
+      if (formatted) formatted += ' ';
+      formatted += `${minutes} Minute${minutes !== 1 ? 's' : ''}`;
+    }
+    
+    return formatted || '0 Minutes';
   }
 
   getURLStats(): URLStats[] {

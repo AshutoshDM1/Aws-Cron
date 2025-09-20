@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Monitor } from '@/types/monitor'
+import { Monitor, URLStats } from '@/types/monitor'
 import { monitorApi } from '@/lib/api'
 
 interface UseMonitorsReturn {
   monitors: Monitor[]
+  UrlStats: URLStats[]
   loading: boolean
   error: string | null
   refetch: () => Promise<void>
@@ -17,10 +18,13 @@ interface UseMonitorsReturn {
   updateMonitor: (url: string, updateData: any) => Promise<void>
   deleteMonitor: (url: string) => Promise<void>
   pingMonitor: (url: string) => Promise<void>
+  getUrlStats: () => Promise<void>
+
 }
 
 export function useMonitors(): UseMonitorsReturn {
   const [monitors, setMonitors] = useState<Monitor[]>([])
+  const [UrlStats, setUrlStats] = useState<URLStats[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -81,18 +85,30 @@ export function useMonitors(): UseMonitorsReturn {
     }
   }, [fetchMonitors])
 
+  const getUrlStats = useCallback(async () => {
+    try {
+      const data = await monitorApi.UrlStats()
+      setUrlStats(data)
+    } catch (err: any) {
+      throw new Error(err.message || 'Failed to get url stats')
+    }
+  }, [])
+
   useEffect(() => {
     fetchMonitors()
+    getUrlStats()
   }, [fetchMonitors])
 
   return {
     monitors,
+    UrlStats,
     loading,
     error,
     refetch: fetchMonitors,
     addMonitor,
     updateMonitor,
     deleteMonitor,
-    pingMonitor
+    pingMonitor,
+    getUrlStats
   }
 }

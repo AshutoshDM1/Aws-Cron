@@ -10,7 +10,6 @@
     "dev": "ts-node src/index.ts",
     "server": "npm run dev",
     "web": "cd web && npm run dev",
-    "dev:all": "npm run dev & npm run web",
     "format": "prettier --write .",
     "check-format": "prettier --check ."
   },

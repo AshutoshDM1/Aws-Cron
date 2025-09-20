@@ -28,5 +28,6 @@ export interface URLStats {
   Interval : number; 
   AvrageResponseTime : number;
   Status : string;
-  lastError: string 
+  lastError: string;
+  totalUptime: string;
 }
