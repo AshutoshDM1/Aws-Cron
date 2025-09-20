@@ -1,4 +1,4 @@
-import { PingConfig } from './index';
+import { PingConfig } from './types';
 
 // Configuration for sites to ping
 export const siteConfigs: PingConfig[] = [
@@ -7,21 +7,21 @@ export const siteConfigs: PingConfig[] = [
     schedule: '*/10 * * * * *', // Every 10 seconds
     timeout: 10000, // 10 seconds
     retries: 3,
-    retryDelay: 30000 // 12 second 
+    retryDelay: 30000 // 30 seconds
   },
   {
-    url: 'https://elitedev.tech',
-    schedule: '*/10 * * * * *', // Every 10 seconds
-    timeout: 10000, // 10 seconds
+    url: 'https://codegen-server-m03i.onrender.com',
+    schedule: '*/10 * * * * *', // Every 20 seconds
+    timeout: 12000, // 12 seconds
     retries: 3,
-    retryDelay: 1000 // 1 second
+    retryDelay: 25000 // 25 seconds
   },
   {
-    url: 'https://codegen.elitedev.tech',
-    schedule: '*/10 * * * * *', // Every 10 seconds
-    timeout: 10000, // 10 seconds
-    retries: 3,
-    retryDelay: 1000 // 1 second
+    url: 'https://restaurant-booking-backend-rb4t.onrender.com',
+    schedule: '*/10 * * * * *', // Every 30 seconds
+    timeout: 15000, // 15 seconds
+    retries: 2,
+    retryDelay: 30000 // 30 seconds
   },
 ];
 

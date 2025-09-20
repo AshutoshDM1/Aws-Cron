@@ -1,10 +1,11 @@
 "use client";
 
-import { Monitor } from "@/types/monitor";
+import { Monitor, URLStats } from "@/types/monitor";
 import MonitorRow from "./MonitorRow";
 
 interface MonitorTableProps {
   monitors: Monitor[];
+  UrlStats : URLStats[];
   selectedMonitors: string[];
   onMonitorSelect: (monitorId: string, selected: boolean) => void;
   onViewIncident?: (monitorId: string) => void;
@@ -15,6 +16,7 @@ interface MonitorTableProps {
 
 const MonitorTable = ({
   monitors,
+  UrlStats,
   selectedMonitors,
   onMonitorSelect,
   onViewIncident,
@@ -57,6 +59,7 @@ const MonitorTable = ({
           <MonitorRow
             key={monitor.id}
             monitor={monitor}
+            UrlStats={UrlStats}
             onViewIncident={onViewIncident}
             onRefresh={onRefresh}
             onEdit={onEdit}

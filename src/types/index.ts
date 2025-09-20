@@ -1,0 +1,33 @@
+export interface PingConfig {
+  url: string;
+  schedule: string;
+  timeout?: number;
+  retries?: number;
+  retryDelay?: number;
+}
+
+export interface PingResult {
+  url: string;
+  timestamp: Date;
+  status: 'success' | 'failed';
+  responseTime?: number;
+  statusCode?: number;
+  error?: string;
+}
+
+export interface PingStats {
+  total: number;
+  success: number;
+  failed: number;
+  avgResponseTime: number;
+}
+
+export interface URLStats {
+  URL : string;
+  Uptime : string;
+  Interval : number; 
+  AvrageResponseTime : number;
+  Status : string;
+  lastError: string;
+  totalUptime: string;
+}
