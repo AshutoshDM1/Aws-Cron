@@ -1,4 +1,5 @@
 import { ThemeToggleButton } from '@/components/ui/theme-animations';
+import Link from 'next/link';
 
 const Navbar = () => {
   return (
@@ -6,24 +7,19 @@ const Navbar = () => {
       <div className="text-2xl font-bold">Elite Cron</div>
       <ul className="flex space-x-6">
         <li>
-          <a href="#" className="hover:underline">
+          <Link href="/" className="hover:underline">
             Home
-          </a>
+          </Link>
         </li>
         <li>
-          <a href="#" className="hover:underline">
+          <Link href="/feature" className="hover:underline">
             Features
-          </a>
+          </Link>
         </li>
         <li>
-          <a href="#" className="hover:underline">
-            Pricing
-          </a>
-        </li>
-        <li>
-          <a href="#" className="hover:underline">
-            Contact
-          </a>
+          <Link href="https://github.com/AshutoshDM1/Aws-Cron" className="hover:underline">
+            GitHub
+          </Link>
         </li>
       </ul>
       <div className="flex space-x-6 ">
