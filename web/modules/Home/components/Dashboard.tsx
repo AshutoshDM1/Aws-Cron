@@ -6,6 +6,7 @@ import DashboardHeader from './DashboardHeader';
 import MonitorTable from './MonitorTable';
 import { MonitorForm } from '@/components/monitor-form';
 import { useMonitors } from '@/hooks/use-monitors';
+import { ChartAreaInteractive } from './Graph';
 
 const Dashboard = () => {
   const {
@@ -26,15 +27,17 @@ const Dashboard = () => {
   const [sortBy, setSortBy] = useState('status-down');
   const [statusFilter, setStatusFilter] = useState<'all' | 'up' | 'down' | 'unknown'>('all');
   const [showMonitorForm, setShowMonitorForm] = useState(false);
+  const [editingMonitor, setEditingMonitor] = useState<Monitor | null>(null);
 
   // Auto-refresh every 30 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       refetch();
+      getUrlStats();
     }, 10000);
 
     return () => clearInterval(interval);
-  }, [refetch]);
+  }, [refetch, getUrlStats]);
 
   // Filter and sort monitors
   const filteredAndSortedMonitors = useMemo(() => {
@@ -99,6 +102,19 @@ const Dashboard = () => {
     await addMonitor(monitorData);
   };
 
+  const handleUpdateMonitor = async (monitorData: {
+    url: string;
+    schedule: string;
+    timeout?: number;
+    retries?: number;
+    retryDelay?: number;
+  }) => {
+    if (editingMonitor) {
+      await updateMonitor(editingMonitor.url, monitorData);
+      setEditingMonitor(null);
+    }
+  };
+
   const handleShowGroups = () => {
     // TODO: Implement group functionality
     console.log('Show groups');
@@ -114,6 +130,7 @@ const Dashboard = () => {
       const monitor = fetchedMonitors.find((m: Monitor) => m.id === monitorId);
       if (monitor) {
         await pingMonitor(monitor.url);
+        // URL stats will be refreshed automatically by the pingMonitor hook
         console.log('Monitor refreshed:', monitorId);
       }
     } catch (error) {
@@ -121,9 +138,26 @@ const Dashboard = () => {
     }
   };
 
-  const handleEdit = (monitorId: string) => {
-    // TODO: Implement monitor editing dialog
-    console.log('Edit monitor:', monitorId);
+  const handleEdit = async (monitorId: string) => {
+    const monitor = fetchedMonitors.find((m: Monitor) => m.id === monitorId);
+    if (monitor) {
+      try {
+        // Fetch the full monitor configuration from the backend
+        const { monitorApi } = await import('@/lib/api');
+        const configs = await monitorApi.getConfigs();
+        const fullConfig = configs.find((config: any) => config.url === monitor.url);
+
+        if (fullConfig) {
+          // Set the monitor with full config data
+          setEditingMonitor({ ...monitor, ...fullConfig });
+        } else {
+          setEditingMonitor(monitor);
+        }
+      } catch (error) {
+        console.error('Failed to fetch monitor config:', error);
+        setEditingMonitor(monitor);
+      }
+    }
   };
 
   const handleDelete = async (monitorId: string) => {
@@ -171,55 +205,79 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative">
-          <span className="block sm:inline">{error}</span>
-          <button
-            onClick={() => window.location.reload()}
-            className="absolute top-0 bottom-0 right-0 px-4 py-3"
-          >
-            <span className="sr-only">Dismiss</span>×
-          </button>
-        </div>
-      )}
+    <>
+      <div className="space-y-6">
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative">
+            <span className="block sm:inline">{error}</span>
+            <button
+              onClick={() => window.location.reload()}
+              className="absolute top-0 bottom-0 right-0 px-4 py-3"
+            >
+              <span className="sr-only">Dismiss</span>×
+            </button>
+          </div>
+        )}
 
-      <DashboardHeader
-        selectedCount={selectedMonitors.length}
-        totalCount={filteredAndSortedMonitors.length}
-        onSelectAll={handleSelectAll}
-        onNewMonitor={handleNewMonitor}
-        onShowGroups={handleShowGroups}
-        searchValue={searchValue}
-        onSearchChange={setSearchValue}
-        statusFilter={statusFilter}
-        onStatusFilterChange={setStatusFilter}
-        onSortChange={setSortBy}
-      />
+        <DashboardHeader
+          selectedCount={selectedMonitors.length}
+          totalCount={filteredAndSortedMonitors.length}
+          onSelectAll={handleSelectAll}
+          onNewMonitor={handleNewMonitor}
+          onShowGroups={handleShowGroups}
+          searchValue={searchValue}
+          onSearchChange={setSearchValue}
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
+          onSortChange={setSortBy}
+        />
 
-      <MonitorTable
-        UrlStats={UrlStats}
-        monitors={filteredAndSortedMonitors}
-        selectedMonitors={selectedMonitors}
-        onMonitorSelect={(monitorId, selected) => {
-          if (selected) {
-            setSelectedMonitors((prev) => [...prev, monitorId]);
-          } else {
-            setSelectedMonitors((prev) => prev.filter((id) => id !== monitorId));
+        <MonitorTable
+          UrlStats={UrlStats}
+          monitors={filteredAndSortedMonitors}
+          selectedMonitors={selectedMonitors}
+          onMonitorSelect={(monitorId, selected) => {
+            if (selected) {
+              setSelectedMonitors((prev) => [...prev, monitorId]);
+            } else {
+              setSelectedMonitors((prev) => prev.filter((id) => id !== monitorId));
+            }
+          }}
+          onViewIncident={handleViewIncident}
+          onRefresh={handleRefresh}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+
+        <MonitorForm
+          open={showMonitorForm}
+          onOpenChange={setShowMonitorForm}
+          onSubmit={handleAddMonitor}
+          mode="add"
+        />
+
+        <MonitorForm
+          open={!!editingMonitor}
+          onOpenChange={(open) => {
+            if (!open) setEditingMonitor(null);
+          }}
+          onSubmit={handleUpdateMonitor}
+          mode="edit"
+          initialData={
+            editingMonitor
+              ? {
+                  url: editingMonitor.url,
+                  schedule: (editingMonitor as any).schedule || '*/30 * * * * *',
+                  timeout: (editingMonitor as any).timeout || 10000,
+                  retries: (editingMonitor as any).retries || 3,
+                  retryDelay: (editingMonitor as any).retryDelay || 30000,
+                }
+              : undefined
           }
-        }}
-        onViewIncident={handleViewIncident}
-        onRefresh={handleRefresh}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
-
-      <MonitorForm
-        open={showMonitorForm}
-        onOpenChange={setShowMonitorForm}
-        onSubmit={handleAddMonitor}
-      />
-    </div>
+        />
+      </div>
+      <ChartAreaInteractive monitor={fetchedMonitors as any} />
+    </>
   );
 };
 

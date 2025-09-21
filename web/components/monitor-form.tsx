@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -30,6 +30,14 @@ interface MonitorFormProps {
     retries?: number
     retryDelay?: number
   }) => Promise<void>
+  initialData?: {
+    url: string
+    schedule: string
+    timeout?: number
+    retries?: number
+    retryDelay?: number
+  }
+  mode?: 'add' | 'edit'
 }
 
 const scheduleOptions = [
@@ -42,7 +50,7 @@ const scheduleOptions = [
   { value: '0 */1 * * *', label: 'Every hour' },
 ]
 
-export function MonitorForm({ open, onOpenChange, onSubmit }: MonitorFormProps) {
+export function MonitorForm({ open, onOpenChange, onSubmit, initialData, mode = 'add' }: MonitorFormProps) {
   const [formData, setFormData] = useState({
     url: '',
     schedule: '*/30 * * * * *',
@@ -51,6 +59,27 @@ export function MonitorForm({ open, onOpenChange, onSubmit }: MonitorFormProps) 
     retryDelay: 30000,
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Update form data when initialData changes (for edit mode)
+  useEffect(() => {
+    if (initialData && mode === 'edit') {
+      setFormData({
+        url: initialData.url,
+        schedule: initialData.schedule,
+        timeout: initialData.timeout || 10000,
+        retries: initialData.retries || 3,
+        retryDelay: initialData.retryDelay || 30000,
+      })
+    } else if (mode === 'add') {
+      setFormData({
+        url: '',
+        schedule: '*/30 * * * * *',
+        timeout: 10000,
+        retries: 3,
+        retryDelay: 30000,
+      })
+    }
+  }, [initialData, mode, open])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -65,17 +94,19 @@ export function MonitorForm({ open, onOpenChange, onSubmit }: MonitorFormProps) 
       await onSubmit(formData)
       
       // Reset form and close dialog
-      setFormData({
-        url: '',
-        schedule: '*/30 * * * * *',
-        timeout: 10000,
-        retries: 3,
-        retryDelay: 30000,
-      })
+      if (mode === 'add') {
+        setFormData({
+          url: '',
+          schedule: '*/30 * * * * *',
+          timeout: 10000,
+          retries: 3,
+          retryDelay: 30000,
+        })
+      }
       onOpenChange(false)
     } catch (error) {
-      console.error('Failed to add monitor:', error)
-      alert('Failed to add monitor. Please try again.')
+      console.error(`Failed to ${mode} monitor:`, error)
+      alert(`Failed to ${mode} monitor. Please try again.`)
     } finally {
       setIsSubmitting(false)
     }
@@ -85,9 +116,12 @@ export function MonitorForm({ open, onOpenChange, onSubmit }: MonitorFormProps) 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add New Monitor</DialogTitle>
+          <DialogTitle>{mode === 'edit' ? 'Edit Monitor' : 'Add New Monitor'}</DialogTitle>
           <DialogDescription>
-            Add a new website or API endpoint to monitor.
+            {mode === 'edit' 
+              ? 'Update the monitor configuration.' 
+              : 'Add a new website or API endpoint to monitor.'
+            }
           </DialogDescription>
         </DialogHeader>
         
@@ -99,6 +133,7 @@ export function MonitorForm({ open, onOpenChange, onSubmit }: MonitorFormProps) 
               placeholder="https://example.com"
               value={formData.url}
               onChange={(e) => setFormData(prev => ({ ...prev, url: e.target.value }))}
+
               required
             />
           </div>
@@ -159,7 +194,10 @@ export function MonitorForm({ open, onOpenChange, onSubmit }: MonitorFormProps) 
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Adding...' : 'Add Monitor'}
+              {isSubmitting 
+                ? (mode === 'edit' ? 'Updating...' : 'Adding...') 
+                : (mode === 'edit' ? 'Update Monitor' : 'Add Monitor')
+              }
             </Button>
           </DialogFooter>
         </form>

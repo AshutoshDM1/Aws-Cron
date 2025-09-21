@@ -42,6 +42,15 @@ export function useMonitors(): UseMonitorsReturn {
     }
   }, [])
 
+  const getUrlStats = useCallback(async () => {
+    try {
+      const data = await monitorApi.UrlStats()
+      setUrlStats(data)
+    } catch (err: any) {
+      throw new Error(err.message || 'Failed to get url stats')
+    }
+  }, [])
+  
   const addMonitor = useCallback(async (monitorData: {
     url: string
     schedule: string
@@ -52,47 +61,46 @@ export function useMonitors(): UseMonitorsReturn {
     try {
       await monitorApi.addMonitor(monitorData)
       await fetchMonitors() // Refetch to get updated list
+      await getUrlStats() // Refetch URL stats
     } catch (err: any) {
       throw new Error(err.message || 'Failed to add monitor')
     }
-  }, [fetchMonitors])
+  }, [fetchMonitors, getUrlStats])
 
   const updateMonitor = useCallback(async (url: string, updateData: any) => {
     try {
       await monitorApi.updateMonitor(url, updateData)
       await fetchMonitors() // Refetch to get updated list
+      await getUrlStats() // Refetch URL stats
     } catch (err: any) {
       throw new Error(err.message || 'Failed to update monitor')
     }
-  }, [fetchMonitors])
+  }, [fetchMonitors, getUrlStats])
 
   const deleteMonitor = useCallback(async (url: string) => {
     try {
       await monitorApi.deleteMonitor(url)
       await fetchMonitors() // Refetch to get updated list
+      await getUrlStats() // Refetch URL stats
     } catch (err: any) {
       throw new Error(err.message || 'Failed to delete monitor')
     }
-  }, [fetchMonitors])
+  }, [fetchMonitors, getUrlStats])
 
   const pingMonitor = useCallback(async (url: string) => {
     try {
       await monitorApi.pingMonitor(url)
       // Optionally refetch to get updated status
-      setTimeout(fetchMonitors, 1000) // Wait a bit for the ping to complete
+      setTimeout(() => {
+        fetchMonitors()
+        getUrlStats()
+      }, 1000) // Wait a bit for the ping to complete
     } catch (err: any) {
       throw new Error(err.message || 'Failed to ping monitor')
     }
-  }, [fetchMonitors])
+  }, [fetchMonitors, getUrlStats])
 
-  const getUrlStats = useCallback(async () => {
-    try {
-      const data = await monitorApi.UrlStats()
-      setUrlStats(data)
-    } catch (err: any) {
-      throw new Error(err.message || 'Failed to get url stats')
-    }
-  }, [])
+
 
   useEffect(() => {
     fetchMonitors()
