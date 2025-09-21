@@ -1,0 +1,20 @@
+[
+  {
+    "URL": "https://elitedev.tech/",
+    "Uptime": "100%",
+    "Interval": 0.17,
+    "AvrageResponseTime": 91,
+    "Status": "up",
+    "lastError": "",
+    "totalUptime": "0 Minutes"
+  },
+  {
+    "URL": "https://codegen.elitedev.tech/",
+    "Uptime": "100%",
+    "Interval": 0.17,
+    "AvrageResponseTime": 665,
+    "Status": "up",
+    "lastError": "",
+    "totalUptime": "0 Minutes"
+  }
+]
