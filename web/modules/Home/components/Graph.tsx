@@ -39,7 +39,6 @@ interface Monitor {
 
 export function ChartAreaInteractive({ monitor }: { monitor: Monitor[] }) {
   const [timeRange, setTimeRange] = React.useState('Last 12 Hours');
-  console.log(monitor);
 
   // Only use up to 5 monitors
   const selectedMonitors = Array.isArray(monitor) ? monitor.slice(0, 5) : [];
@@ -177,8 +176,6 @@ export function ChartAreaInteractive({ monitor }: { monitor: Monitor[] }) {
       ...item,
       date: formatDate(new Date(item.date))
     }));
-
-  console.log(filteredData);
 
   return (
     <Card className="pt-0">

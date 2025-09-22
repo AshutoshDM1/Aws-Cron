@@ -4,7 +4,7 @@ import Link from 'next/link';
 const Navbar = () => {
   return (
     <nav className="flex items-center justify-between py-4">
-      <div className="text-2xl font-bold">Elite Cron</div>
+      <div className="text-2xl font-bold text-primary">Elite Cron</div>
       <ul className="flex space-x-6">
         <li>
           <Link href="/" className="hover:underline">

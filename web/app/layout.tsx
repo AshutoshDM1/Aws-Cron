@@ -25,7 +25,7 @@ const siteUrl = "https://aws-cron.vercel.app"
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl), 
   title: {
-    default: "AWS Cron - Website Monitoring & Uptime Tracker ",
+    default: "Elite Cron - Website Monitoring & Uptime Tracker ",
     template: "%s | AWS Cron - Website Monitoring"
   },
   description:
@@ -91,26 +91,26 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/favicon.png", sizes: "16x16", type: "image/png" },
-      { url: "/favicon.png", sizes: "32x32", type: "image/png" },
-      { url: "/favicon.png", sizes: "96x96", type: "image/png" },
+      { url: "/favicon.webp", sizes: "16x16", type: "image/png" },
+      { url: "/favicon.webp", sizes: "32x32", type: "image/png" },
+      { url: "/favicon.webp", sizes: "96x96", type: "image/png" },
     ],
     apple: [
-      { url: "/favicon.png", sizes: "57x57", type: "image/png" },
-      { url: "/favicon.png", sizes: "60x60", type: "image/png" },
-      { url: "/favicon.png", sizes: "72x72", type: "image/png" },
-      { url: "/favicon.png", sizes: "76x76", type: "image/png" },
-      { url: "/favicon.png", sizes: "114x114", type: "image/png" },
-      { url: "/favicon.png", sizes: "120x120", type: "image/png" },
-      { url: "/favicon.png", sizes: "144x144", type: "image/png" },
-      { url: "/favicon.png", sizes: "152x152", type: "image/png" },
-      { url: "/favicon.png", sizes: "180x180", type: "image/png" },
+      { url: "/favicon.webp", sizes: "57x57", type: "image/png" },
+      { url: "/favicon.webp", sizes: "60x60", type: "image/png" },
+      { url: "/favicon.webp", sizes: "72x72", type: "image/png" },
+      { url: "/favicon.webp", sizes: "76x76", type: "image/png" },
+      { url: "/favicon.webp", sizes: "114x114", type: "image/png" },
+      { url: "/favicon.webp", sizes: "120x120", type: "image/png" },
+      { url: "/favicon.webp", sizes: "144x144", type: "image/png" },
+      { url: "/favicon.webp", sizes: "152x152", type: "image/png" },
+      { url: "/favicon.webp", sizes: "180x180", type: "image/png" },
     ],
-    shortcut: "/favicon.png",
+    shortcut: "/favicon.webp",
     other: [
       {
         rel: "mask-icon",
-        url: "/favicon.png",
+        url: "/favicon.webp",
         color: "#000000",
       },
     ],
@@ -133,7 +133,7 @@ export const metadata: Metadata = {
         type: "image/png",
       },
       {
-        url: "/favicon.png",
+        url: "/favicon.webp",
         width: 512,
         height: 512,
         alt: "AWS Cron Logo",
