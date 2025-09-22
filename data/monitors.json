@@ -12,5 +12,12 @@
     "timeout": 10000,
     "retries": 3,
     "retryDelay": 30000
+  },
+  {
+    "url": "https://aws-cron.elitedev.tech/",
+    "schedule": "*/10 * * * * *",
+    "timeout": 10000,
+    "retries": 3,
+    "retryDelay": 30000
   }
 ]

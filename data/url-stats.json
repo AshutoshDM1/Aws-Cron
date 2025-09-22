@@ -3,18 +3,27 @@
     "URL": "https://elitedev.tech/",
     "Uptime": "100%",
     "Interval": 0.17,
-    "AvrageResponseTime": 91,
+    "AvrageResponseTime": 150,
     "Status": "up",
     "lastError": "",
-    "totalUptime": "0 Minutes"
+    "totalUptime": "19 Hours 51 Minutes"
   },
   {
     "URL": "https://codegen.elitedev.tech/",
     "Uptime": "100%",
     "Interval": 0.17,
-    "AvrageResponseTime": 665,
+    "AvrageResponseTime": 94,
     "Status": "up",
     "lastError": "",
-    "totalUptime": "0 Minutes"
+    "totalUptime": "19 Hours 51 Minutes"
+  },
+  {
+    "URL": "https://aws-cron.elitedev.tech/",
+    "Uptime": "100%",
+    "Interval": 0.17,
+    "AvrageResponseTime": 7,
+    "Status": "up",
+    "lastError": "",
+    "totalUptime": "19 Hours 27 Minutes"
   }
 ]
