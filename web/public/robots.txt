@@ -1,0 +1,30 @@
+# AWS Cron - Website Monitoring Service
+# https://aws-cron.vercel.app
+
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /_next/
+Disallow: /admin/
+Disallow: /private/
+
+# Allow specific crawlers
+User-agent: Googlebot
+Allow: /
+Disallow: /api/
+Disallow: /_next/
+Disallow: /admin/
+Disallow: /private/
+
+User-agent: Bingbot
+Allow: /
+Disallow: /api/
+Disallow: /_next/
+Disallow: /admin/
+Disallow: /private/
+
+# Crawl delay
+Crawl-delay: 1
+
+# Sitemap
+Sitemap: https://aws-cron.vercel.app/sitemap.xml

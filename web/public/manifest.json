@@ -1,0 +1,60 @@
+{
+  "name": "AWS Cron - Website Monitoring & Uptime Tracker",
+  "short_name": "AWS Cron",
+  "description": "Professional website monitoring and uptime tracking service with cron job scheduling, real-time alerts, and comprehensive analytics dashboard.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "orientation": "portrait-primary",
+  "categories": ["productivity", "developer", "monitoring"],
+  "lang": "en-US",
+  "dir": "ltr",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon.png", 
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/website.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "AWS Cron Dashboard - Website Monitoring Interface"
+    }
+  ],
+  "features": [
+    "Website Monitoring",
+    "Uptime Tracking",
+    "Cron Job Scheduling", 
+    "Real-time Alerts",
+    "Response Time Monitoring",
+    "Analytics Dashboard"
+  ]
+}

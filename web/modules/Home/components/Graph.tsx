@@ -38,7 +38,8 @@ interface Monitor {
 }
 
 export function ChartAreaInteractive({ monitor }: { monitor: Monitor[] }) {
-  const [timeRange, setTimeRange] = React.useState('Last 20 Minutes');
+  const [timeRange, setTimeRange] = React.useState('Last 12 Hours');
+  console.log(monitor);
 
   // Only use up to 5 monitors
   const selectedMonitors = Array.isArray(monitor) ? monitor.slice(0, 5) : [];
@@ -62,18 +63,21 @@ export function ChartAreaInteractive({ monitor }: { monitor: Monitor[] }) {
   const slots: string[] = [];
   
   // Determine slot count and interval based on time range
-  let slotCount = 20; // Default: 20 minutes
-  let intervalMinutes = 1;
+  let slotCount = 144; // Default: 12 hours (144 slots of 5 minutes each)
+  let intervalMinutes = 5;
   
-  if (timeRange === 'Last 10 minutes') {
-    slotCount = 10;
-    intervalMinutes = 1;
-  } else if (timeRange === 'Last 5 minutes') {
-    slotCount = 5;
-    intervalMinutes = 1;
-  } else { // 'Last 20 Minutes' or default
-    slotCount = 20;
-    intervalMinutes = 1;
+  if (timeRange === 'Last 6 Hours') {
+    slotCount = 72; // 6 hours * 12 slots per hour
+    intervalMinutes = 5;
+  } else if (timeRange === 'Last 3 Hours') {
+    slotCount = 36; // 3 hours * 12 slots per hour
+    intervalMinutes = 5;
+  } else if (timeRange === 'Last 1 Hour') {
+    slotCount = 12; // 1 hour * 12 slots per hour
+    intervalMinutes = 5;
+  } else { // 'Last 12 Hours' or default
+    slotCount = 144;
+    intervalMinutes = 5;
   }
   
   for (let i = slotCount - 1; i >= 0; i--) {
@@ -82,78 +86,97 @@ export function ChartAreaInteractive({ monitor }: { monitor: Monitor[] }) {
   }
   
 
-  // For each monitor, map its history to the nearest slot
-  const monitorSlotMaps: { [monitorId: string]: { [slot: string]: number | null } } = {};
-  selectedMonitors.forEach((mon, index) => {
-    
-    const slotMap: { [slot: string]: number | null } = {};
+  // Use the backend's pre-processed history data directly
+  const chartData: { [key: string]: any }[] = [];
+  
+  // Collect all unique timestamps from all monitors' history
+  const allTimeSlots = new Set<string>();
+  
+  selectedMonitors.forEach(mon => {
     if (Array.isArray(mon.history) && mon.history.length > 0) {
-      // Filter history entries to only include recent ones within our time range
+      // Filter history based on selected time range
       const cutoffTime = new Date(now);
-      if (timeRange === 'Last 10 minutes') {
-        cutoffTime.setMinutes(cutoffTime.getMinutes() - 10);
-      } else if (timeRange === 'Last 5 minutes') {
-        cutoffTime.setMinutes(cutoffTime.getMinutes() - 5);
-      } else {
-        cutoffTime.setMinutes(cutoffTime.getMinutes() - 20);
+      if (timeRange === 'Last 6 Hours') {
+        cutoffTime.setHours(cutoffTime.getHours() - 6);
+      } else if (timeRange === 'Last 3 Hours') {
+        cutoffTime.setHours(cutoffTime.getHours() - 3);
+      } else if (timeRange === 'Last 1 Hour') {
+        cutoffTime.setHours(cutoffTime.getHours() - 1);
+      } else { // 'Last 12 Hours' or default
+        cutoffTime.setHours(cutoffTime.getHours() - 12);
       }
       
-      const recentHistory = mon.history.filter(entry => 
-        new Date(entry.timestamp) >= cutoffTime
-      );
-      
-      console.log(`Monitor ${mon.id} has ${recentHistory.length} recent entries out of ${mon.history.length} total`);
-      
-      recentHistory.forEach((entry) => {
-        const entryDate = new Date(entry.timestamp);
-        
-        // Find the closest slot
-        let closestSlot = slots[0];
-        let minDiff = Math.abs(entryDate.getTime() - new Date(slots[0]).getTime());
-        
-        slots.forEach(slot => {
-          const slotDate = new Date(slot);
-          const diff = Math.abs(entryDate.getTime() - slotDate.getTime());
-          if (diff < minDiff) {
-            minDiff = diff;
-            closestSlot = slot;
-          }
+      mon.history
+        .filter(entry => new Date(entry.timestamp) >= cutoffTime)
+        .forEach(entry => {
+          allTimeSlots.add(entry.timestamp);
         });
-        
-        // Only map if the difference is reasonable (within 3 minutes for better coverage)
-        if (minDiff <= 3 * 60 * 1000) {
-          slotMap[closestSlot] = entry.responseTimeMs;
-        }
-      });
     }
-    monitorSlotMaps[mon.id] = slotMap;
-  });
-
-  // Build chartData: each slot is an object with date and responseTime for each monitor
-  // e.g. { date: "...", [monitor1.id]: ..., [monitor2.id]: ... }
-  const chartData = slots.map((slot) => {
-    const dataPoint: { [key: string]: any } = { date: slot };
-    selectedMonitors.forEach((mon) => {
-      dataPoint[mon.id] = monitorSlotMaps[mon.id][slot] ?? null;
-    });
-    return dataPoint;
   });
   
-  // Filter data based on selected time range
-  let filteredData = chartData.filter((item) => {
-    const date = new Date(item.date);
-    const minutesAgo = new Date(now);
+  // Create chart data for each time slot
+  const sortedTimeSlots = Array.from(allTimeSlots).sort();
+  
+  sortedTimeSlots.forEach(timeSlot => {
+    const dataPoint: { [key: string]: any } = { date: timeSlot };
     
-    if (timeRange === 'Last 10 minutes') {
-      minutesAgo.setMinutes(minutesAgo.getMinutes() - 10);
-    } else if (timeRange === 'Last 5 minutes') {
-      minutesAgo.setMinutes(minutesAgo.getMinutes() - 5);
-    } else { // 'Last 20 Minutes' or default
-      minutesAgo.setMinutes(minutesAgo.getMinutes() - 20);
-    }
+    selectedMonitors.forEach(mon => {
+      let responseTime = null;
+      
+      if (Array.isArray(mon.history) && mon.history.length > 0) {
+        // Find exact match first, then closest
+        const exactMatch = mon.history.find(entry => entry.timestamp === timeSlot);
+        
+        if (exactMatch) {
+          responseTime = (exactMatch as any).responseTimeMs;
+        } else {
+          // Find the closest entry within reasonable time
+          let closestEntry = null;
+          let minTimeDiff = Infinity;
+          
+          mon.history.forEach(entry => {
+            const entryTime = new Date(entry.timestamp);
+            const slotTime = new Date(timeSlot);
+            const timeDiff = Math.abs(entryTime.getTime() - slotTime.getTime());
+            
+            // Accept entries within 2.5 minutes of the slot (half of 5-minute interval)
+            if (timeDiff <= 2.5 * 60 * 1000 && timeDiff < minTimeDiff) {
+              minTimeDiff = timeDiff;
+              closestEntry = entry;
+            }
+          });
+          
+          if (closestEntry) {
+            responseTime = (closestEntry as any).responseTimeMs;
+          }
+        }
+      }
+      
+      dataPoint[mon.id] = responseTime;
+    });
     
-    return date >= minutesAgo;
+    chartData.push(dataPoint);
   });
+  
+  // If we have no data from history, create empty slots
+  if (chartData.length === 0) {
+    for (let i = slotCount - 1; i >= 0; i--) {
+      const slot = new Date(now.getTime() - i * intervalMinutes * 60 * 1000);
+      const dataPoint: { [key: string]: any } = { date: formatDate(slot) };
+      selectedMonitors.forEach(mon => {
+        dataPoint[mon.id] = null;
+      });
+      chartData.push(dataPoint);
+    }
+  }
+  
+  // Sort by date to ensure proper order and format dates consistently
+  const filteredData = chartData
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .map(item => ({
+      ...item,
+      date: formatDate(new Date(item.date))
+    }));
 
   console.log(filteredData);
 
@@ -172,14 +195,17 @@ export function ChartAreaInteractive({ monitor }: { monitor: Monitor[] }) {
             <SelectValue placeholder={timeRange} />
           </SelectTrigger>
           <SelectContent className="rounded-xl">
-            <SelectItem value="Last 20 Minutes" className="rounded-lg">
-              Last 20 Minutes
+            <SelectItem value="Last 12 Hours" className="rounded-lg">
+              Last 12 Hours
             </SelectItem>
-            <SelectItem value="Last 10 minutes" className="rounded-lg"> 
-              Last 10 minutes
+            <SelectItem value="Last 6 Hours" className="rounded-lg"> 
+              Last 6 Hours
             </SelectItem>
-            <SelectItem value="Last 5 minutes" className="rounded-lg">
-              Last 5 minutes
+            <SelectItem value="Last 3 Hours" className="rounded-lg">
+              Last 3 Hours
+            </SelectItem>
+            <SelectItem value="Last 1 Hour" className="rounded-lg">
+              Last 1 Hour
             </SelectItem>
           </SelectContent>
         </Select>
@@ -245,6 +271,16 @@ export function ChartAreaInteractive({ monitor }: { monitor: Monitor[] }) {
               minTickGap={32}
               tickFormatter={(value) => {
                 const date = new Date(value);
+                // For longer time ranges, show date + time
+                if (timeRange === 'Last 12 Hours' || timeRange === 'Last 6 Hours') {
+                  return date.toLocaleString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  });
+                }
+                // For shorter ranges, just show time
                 return date.toLocaleTimeString('en-US', {
                   hour: '2-digit',
                   minute: '2-digit',

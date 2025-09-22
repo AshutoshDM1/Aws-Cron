@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<browserconfig>
+    <msapplication>
+        <tile>
+            <square70x70logo src="/favicon.png"/>
+            <square150x150logo src="/favicon.png"/>
+            <square310x310logo src="/favicon.png"/>
+            <TileColor>#000000</TileColor>
+        </tile>
+        <notification>
+            <polling-uri src="https://aws-cron.vercel.app/api/notifications/1"/>
+            <polling-uri2 src="https://aws-cron.vercel.app/api/notifications/2"/>
+            <polling-uri3 src="https://aws-cron.vercel.app/api/notifications/3"/>
+            <polling-uri4 src="https://aws-cron.vercel.app/api/notifications/4"/>
+            <polling-uri5 src="https://aws-cron.vercel.app/api/notifications/5"/>
+            <frequency>30</frequency>
+            <cycle>1</cycle>
+        </notification>
+    </msapplication>
+</browserconfig>

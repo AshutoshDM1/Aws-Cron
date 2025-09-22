@@ -153,12 +153,8 @@ export class MonitoringService {
         status = lastResult.status === 'success' ? 'up' : 'down';
       }
 
-      // Create history for sparkline
-      const history = urlResults.slice(-50).map(result => ({
-        timestamp: result.timestamp.toString(),
-        status: result.status === 'success' ? 'up' as const : 'down' as const,
-        responseTimeMs: result.responseTime
-      }));
+      // Create history for last 12 hours with proper time slots
+      const history = this.createTwelveHourHistory(urlResults);
 
       return {
         id: (index + 1).toString(),
@@ -171,6 +167,100 @@ export class MonitoringService {
         history
       };
     });
+  }
+
+  private createTwelveHourHistory(urlResults: any[]): Array<{
+    timestamp: string;
+    status: 'up' | 'down';
+    responseTimeMs: number;
+  }> {
+    const now = new Date();
+    const twelveHoursAgo = new Date(now.getTime() - 12 * 60 * 60 * 1000);
+    
+    // Filter results to last 12 hours
+    const last12HourResults = urlResults.filter(result => 
+      new Date(result.timestamp) >= twelveHoursAgo
+    ).sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+    
+    if (last12HourResults.length === 0) {
+      return [];
+    }
+    
+    // Instead of creating artificial slots, let's use actual data points
+    // and only fill gaps intelligently
+    const slots: Array<{
+      timestamp: string;
+      status: 'up' | 'down';
+      responseTimeMs: number;
+    }> = [];
+    
+    // Group results by time intervals (5-minute buckets)
+    const timeGroups = new Map<string, any[]>();
+    
+    last12HourResults.forEach(result => {
+      const resultTime = new Date(result.timestamp);
+      // Round down to nearest 5-minute interval
+      const roundedTime = new Date(resultTime);
+      roundedTime.setMinutes(Math.floor(resultTime.getMinutes() / 5) * 5, 0, 0);
+      const key = roundedTime.toISOString();
+      
+      if (!timeGroups.has(key)) {
+        timeGroups.set(key, []);
+      }
+      timeGroups.get(key)!.push(result);
+    });
+    
+    // Convert grouped data to slots, using the most recent data in each group
+    const sortedGroups = Array.from(timeGroups.entries()).sort(([a], [b]) => 
+      new Date(a).getTime() - new Date(b).getTime()
+    );
+    
+    sortedGroups.forEach(([timeKey, results]) => {
+      // Use the most recent result in this time group
+      const mostRecent = results[results.length - 1];
+      
+      slots.push({
+        timestamp: timeKey,
+        status: mostRecent.status === 'success' ? 'up' as const : 'down' as const,
+        responseTimeMs: mostRecent.responseTime || 0
+      });
+    });
+    
+    // Only fill small gaps (less than 30 minutes) with interpolated data
+    const filledSlots: Array<{
+      timestamp: string;
+      status: 'up' | 'down';
+      responseTimeMs: number;
+    }> = [];
+    
+    for (let i = 0; i < slots.length; i++) {
+      filledSlots.push(slots[i]);
+      
+      // Check if there's a gap to the next slot
+      if (i < slots.length - 1) {
+        const currentTime = new Date(slots[i].timestamp);
+        const nextTime = new Date(slots[i + 1].timestamp);
+        const gapMinutes = (nextTime.getTime() - currentTime.getTime()) / (1000 * 60);
+        
+        // Only fill gaps smaller than 30 minutes to avoid showing stale data
+        if (gapMinutes > 5 && gapMinutes <= 30) {
+          const gapSlots = Math.floor(gapMinutes / 5) - 1;
+          
+          for (let j = 1; j <= gapSlots; j++) {
+            const interpolatedTime = new Date(currentTime.getTime() + j * 5 * 60 * 1000);
+            
+            // Use the current slot's data but mark it as potentially stale
+            filledSlots.push({
+              timestamp: interpolatedTime.toISOString(),
+              status: slots[i].status,
+              responseTimeMs: slots[i].responseTimeMs
+            });
+          }
+        }
+      }
+    }
+    
+    return filledSlots;
   }
 
   private extractDomainName(url: string): string {
