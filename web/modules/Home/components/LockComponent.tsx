@@ -12,7 +12,7 @@ const LockComponent = () => {
       {!check && (
         <>
           <BeamsBackground>
-            <div className="fixed inset-0 bg-black/50 z-50">
+            <div className="fixed inset-0 overflow-hidden bg-black/50 z-50">
               <div className="min-h-screen flex flex-col justify-center items-center">
                 {loading ? (
                   <div className="flex flex-col items-center">

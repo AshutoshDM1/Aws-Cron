@@ -153,7 +153,7 @@ export function BeamsBackground({
   return (
     <div
       className={cn(
-        'min-h-screen absolute z-10 w-full overflow-hidden bg-neutral-950',
+        'min-h-screen fixed z-10 w-full overflow-hidden bg-neutral-950',
         className
       )}
     >

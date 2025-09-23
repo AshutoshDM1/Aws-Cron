@@ -5,7 +5,7 @@ const Navbar = () => {
   return (
     <nav className="flex items-center justify-between py-4">
       <div className="text-2xl font-bold text-primary">Elite Cron</div>
-      <ul className="flex space-x-6">
+      <ul className="md:flex space-x-6 hidden">
         <li>
           <Link href="/" className="hover:underline">
             Home

@@ -75,11 +75,11 @@ const MonitorRow = ({
           <Badge className="text-xs bg-white text-black">HTTP</Badge>
         </div>
 
-        <div className="text-sm text-white">
+        <div className="text-sm text-white line-clamp-3">
           {formatDuration(monitor.status, urlStats?.totalUptime || 'Unknown')}{' '}
           {/* This would come from monitor data */}
           {monitor.status === 'down' && getStatusText() && (
-            <span className="ml-2">| {getStatusText()}</span>
+            <span className="ml-2 line-clamp-3">| {getStatusText()}</span>
           )}
         </div>
       </div>
@@ -97,14 +97,14 @@ const MonitorRow = ({
           </Button>
         )}
 
-        <div className="flex items-center gap-1 text-xs text-white">
+        <div className="items-center gap-1 text-xs text-white hidden md:flex">
           <RefreshCw className="w-3 h-3" />
           <span>{convertIntervalToTimeFormat(urlStats?.Interval || 0)}</span>
         </div>
       </div>
 
       {/* Uptime Bar */}
-      <div className="w-32">
+      <div className="w-32 hidden md:block">
         <UptimeBar uptimePercent={Number(urlStats?.Uptime.split('%')[0])} status={monitor.status} />
       </div>
 
